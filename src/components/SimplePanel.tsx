@@ -347,56 +347,74 @@ const withDarkChartText = (option: any): any => {
   const subtle = "rgba(243, 244, 246, 0.78)";
   const split = "rgba(243, 244, 246, 0.10)";
 
-  const next: any = { ...(option ?? {}) };
+  const applyDarkText = (source: any): any => {
+    const next: any = { ...(source ?? {}) };
 
-  next.textStyle = { ...(next.textStyle ?? {}), color: text };
-  if (next.title) {
-    const titles = Array.isArray(next.title) ? next.title : [next.title];
-    next.title = titles.map((t: any) => ({ ...(t ?? {}), textStyle: { ...(t?.textStyle ?? {}), color: text } }));
-    if (!Array.isArray(option?.title)) next.title = next.title[0];
-  }
+    next.textStyle = { ...(next.textStyle ?? {}), color: next.textStyle?.color ?? text };
+    if (next.title) {
+      const titles = Array.isArray(next.title) ? next.title : [next.title];
+      next.title = titles.map((t: any) => ({
+        ...(t ?? {}),
+        textStyle: { ...(t?.textStyle ?? {}), color: t?.textStyle?.color ?? text },
+      }));
+      if (!Array.isArray(source?.title)) next.title = next.title[0];
+    }
 
-  if (next.legend) {
-    const legends = Array.isArray(next.legend) ? next.legend : [next.legend];
-    next.legend = legends.map((l: any) => ({ ...(l ?? {}), textStyle: { ...(l?.textStyle ?? {}), color: subtle } }));
-    if (!Array.isArray(option?.legend)) next.legend = next.legend[0];
-  }
+    if (next.legend) {
+      const legends = Array.isArray(next.legend) ? next.legend : [next.legend];
+      next.legend = legends.map((l: any) => ({
+        ...(l ?? {}),
+        textStyle: { ...(l?.textStyle ?? {}), color: l?.textStyle?.color ?? subtle },
+      }));
+      if (!Array.isArray(source?.legend)) next.legend = next.legend[0];
+    }
 
-  const patchAxis = (axis: any) => ({
-    ...(axis ?? {}),
-    axisLabel: { ...(axis?.axisLabel ?? {}), color: text },
-    nameTextStyle: { ...(axis?.nameTextStyle ?? {}), color: subtle },
-    axisLine: {
-      ...(axis?.axisLine ?? {}),
-      lineStyle: { ...(axis?.axisLine?.lineStyle ?? {}), color: subtle },
-    },
-    splitLine: {
-      ...(axis?.splitLine ?? {}),
-      lineStyle: { ...(axis?.splitLine?.lineStyle ?? {}), color: split },
-    },
-  });
+    const patchAxis = (axis: any) => ({
+      ...(axis ?? {}),
+      axisLabel: { ...(axis?.axisLabel ?? {}), color: axis?.axisLabel?.color ?? text },
+      nameTextStyle: { ...(axis?.nameTextStyle ?? {}), color: axis?.nameTextStyle?.color ?? subtle },
+      axisLine: {
+        ...(axis?.axisLine ?? {}),
+        lineStyle: { ...(axis?.axisLine?.lineStyle ?? {}), color: axis?.axisLine?.lineStyle?.color ?? subtle },
+      },
+      splitLine: {
+        ...(axis?.splitLine ?? {}),
+        lineStyle: { ...(axis?.splitLine?.lineStyle ?? {}), color: axis?.splitLine?.lineStyle?.color ?? split },
+      },
+    });
 
-  if (next.xAxis) {
-    next.xAxis = Array.isArray(next.xAxis) ? next.xAxis.map(patchAxis) : patchAxis(next.xAxis);
-  }
-  if (next.yAxis) {
-    next.yAxis = Array.isArray(next.yAxis) ? next.yAxis.map(patchAxis) : patchAxis(next.yAxis);
-  }
+    if (next.xAxis) {
+      next.xAxis = Array.isArray(next.xAxis) ? next.xAxis.map(patchAxis) : patchAxis(next.xAxis);
+    }
+    if (next.yAxis) {
+      next.yAxis = Array.isArray(next.yAxis) ? next.yAxis.map(patchAxis) : patchAxis(next.yAxis);
+    }
 
-  if (next.series) {
-    const series = Array.isArray(next.series) ? next.series : [next.series];
-    next.series = series.map((s: any) => ({
-      ...(s ?? {}),
-      label: { ...(s?.label ?? {}), color: text },
-      endLabel: { ...(s?.endLabel ?? {}), color: text },
-    }));
-    if (!Array.isArray(option?.series)) next.series = next.series[0];
-  }
+    if (next.series) {
+      const series = Array.isArray(next.series) ? next.series : [next.series];
+      next.series = series.map((s: any) => ({
+        ...(s ?? {}),
+        label: { ...(s?.label ?? {}), color: s?.label?.color ?? text },
+        endLabel: { ...(s?.endLabel ?? {}), color: s?.endLabel?.color ?? text },
+      }));
+      if (!Array.isArray(source?.series)) next.series = next.series[0];
+    }
 
-  next.tooltip = {
-    ...(next.tooltip ?? {}),
-    textStyle: { ...(next.tooltip?.textStyle ?? {}), color: text },
+    next.tooltip = {
+      ...(next.tooltip ?? {}),
+      textStyle: { ...(next.tooltip?.textStyle ?? {}), color: next.tooltip?.textStyle?.color ?? text },
+    };
+
+    return next;
   };
+
+  const next = applyDarkText(option);
+  if (option?.baseOption) {
+    next.baseOption = applyDarkText(option.baseOption);
+  }
+  if (Array.isArray(option?.options)) {
+    next.options = option.options.map(applyDarkText);
+  }
 
   return next;
 };
@@ -1059,8 +1077,16 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height, fie
     chartInstancesRef.current = {};
     attachedChartEventsRef.current = {};
     domRefs.current = {};
-    Object.keys(widgetRuntimeRef.current).forEach((groupKey) => destroyWidgetRuntimeInternal(groupKey, true));
-    widgetDomRefs.current = {};
+    // Las secciones también cambian al reordenarse o al actualizar estado visual.
+    // No desmontamos los widgets que siguen presentes: hacerlo vuelve a aplicar
+    // su HTML y dispara `mount` repetidamente (por ejemplo, tablas paginadas).
+    const currentSectionKeys = new Set(sections.map((section) => section.key));
+    Object.keys(widgetRuntimeRef.current).forEach((groupKey) => {
+      if (!currentSectionKeys.has(groupKey)) {
+        destroyWidgetRuntimeInternal(groupKey, true);
+        delete widgetDomRefs.current[groupKey];
+      }
+    });
     setLoadingCharts({});
     setOpenKeys((prev) => {
       const next = new Set(prev);
