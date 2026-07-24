@@ -2208,7 +2208,7 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height, fie
             className={css`
               cursor: pointer;
               user-select: none;
-              padding: 12px 14px;
+              padding: 6px 10px;
               font-weight: 700;
               display: flex;
               align-items: center;
@@ -2229,9 +2229,9 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height, fie
             `}
           >
             <span className={css`display: flex; flex-direction: column; gap: 2px;`}>
-              <span className={css`font-size: 14px;`}>{cfg.title}</span>
+              <span className={css`font-size: 13px;`}>{cfg.title}</span>
               {cfg.subtitle && (
-                <span className={css`font-size: 12px; font-weight: 500; color: ${ui.summaryMetaText};`}>
+                <span className={css`font-size: 11px; font-weight: 500; color: ${ui.summaryMetaText};`}>
                   {cfg.subtitle}
                 </span>
               )}
@@ -2271,8 +2271,8 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height, fie
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
-                    width: 30px;
-                    height: 30px;
+                    width: 24px;
+                    height: 24px;
                     border-radius: 999px;
                     border: 1px solid ${ui.summaryChevronBorder};
                     background: ${ui.summaryChevronBg};
@@ -2286,8 +2286,8 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height, fie
                     viewBox="0 0 24 24"
                     className={css`
                       display: block;
-                      width: 16px;
-                      height: 16px;
+                      width: 14px;
+                      height: 14px;
                     `}
                   >
                     <path
@@ -2326,7 +2326,7 @@ export const SimplePanel: React.FC<Props> = ({ options, data, width, height, fie
                 </button>
                 */}
               </span>
-              {isOpen ? "Cerrar" : "Mostrar"}
+              {isOpen ? "Ocultar" : "Mostrar"}
               <span
                 className={css`
                   display: inline-flex;
